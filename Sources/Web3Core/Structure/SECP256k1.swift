@@ -21,7 +21,7 @@ public struct SECP256K1 {
 }
 
 extension SECP256K1 {
-    static let context = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_SIGN|SECP256K1_CONTEXT_VERIFY))
+    static let context = web3_secp256k1_context_create(UInt32(SECP256K1_CONTEXT_SIGN|SECP256K1_CONTEXT_VERIFY))
 
     public static func signForRecovery(hash: Data, privateKey: Data, useExtraEntropy: Bool = false) -> (serializedSignature: Data?, rawSignature: Data?) {
         if hash.count != 32 || privateKey.count != 32 { return (nil, nil) }
@@ -73,7 +73,7 @@ extension SECP256K1 {
         let immutablePointer = UnsafePointer(arrayOfPointers)
         var publicKey: secp256k1_pubkey = secp256k1_pubkey()
         let result = withUnsafeMutablePointer(to: &publicKey) { (pubKeyPtr: UnsafeMutablePointer<secp256k1_pubkey>) -> Int32 in
-            let res = secp256k1_ec_pubkey_combine(context, pubKeyPtr, immutablePointer, numToCombine)
+            let res = web3_secp256k1_ec_pubkey_combine(context, pubKeyPtr, immutablePointer, numToCombine)
             return res
         }
         if result == 0 {
@@ -91,7 +91,7 @@ extension SECP256K1 {
                 let hashPointer = hashRawPointer.assumingMemoryBound(to: UInt8.self)
                 return withUnsafePointer(to: &recoverableSignature) { (signaturePointer: UnsafePointer<secp256k1_ecdsa_recoverable_signature>) -> Int32 in
                     withUnsafeMutablePointer(to: &publicKey) { (pubKeyPtr: UnsafeMutablePointer<secp256k1_pubkey>) -> Int32 in
-                        let res = secp256k1_ecdsa_recover(context, pubKeyPtr, signaturePointer, hashPointer)
+                        let res = web3_secp256k1_ecdsa_recover(context, pubKeyPtr, signaturePointer, hashPointer)
                         return res
                     }
                 }
@@ -112,7 +112,7 @@ extension SECP256K1 {
         let result = privateKey.withUnsafeBytes { (pkRawBufferPointer: UnsafeRawBufferPointer) -> Int32? in
             if let pkRawPointer = pkRawBufferPointer.baseAddress, pkRawBufferPointer.count > 0 {
                 let privateKeyPointer = pkRawPointer.assumingMemoryBound(to: UInt8.self)
-                let res = secp256k1_ec_pubkey_create(context, &publicKey, privateKeyPointer)
+                let res = web3_secp256k1_ec_pubkey_create(context, &publicKey, privateKeyPointer)
                 return res
             } else {
                 return nil
@@ -133,7 +133,7 @@ extension SECP256K1 {
                 let serializedPubkeyPointer = serializedPkRawPointer.assumingMemoryBound(to: UInt8.self)
                 return withUnsafeMutablePointer(to: &keyLength) { (keyPtr: UnsafeMutablePointer<Int>) -> Int32 in
                     withUnsafeMutablePointer(to: &publicKey) { (pubKeyPtr: UnsafeMutablePointer<secp256k1_pubkey>) -> Int32 in
-                        let res = secp256k1_ec_pubkey_serialize(
+                        let res = web3_secp256k1_ec_pubkey_serialize(
                             context,
                             serializedPubkeyPointer,
                             keyPtr,
@@ -165,7 +165,7 @@ extension SECP256K1 {
         let result = serializedKey.withUnsafeBytes { (serializedKeyRawBufferPointer: UnsafeRawBufferPointer) -> Int32? in
             if let serializedKeyRawPointer = serializedKeyRawBufferPointer.baseAddress, serializedKeyRawBufferPointer.count > 0 {
                 let serializedKeyPointer = serializedKeyRawPointer.assumingMemoryBound(to: UInt8.self)
-                let res = secp256k1_ec_pubkey_parse(context, &publicKey, serializedKeyPointer, keyLen)
+                let res = web3_secp256k1_ec_pubkey_parse(context, &publicKey, serializedKeyPointer, keyLen)
                 return res
             } else {
                 return nil
@@ -193,7 +193,7 @@ extension SECP256K1 {
             if let rawPtr = rawBufferPtr.baseAddress, rawBufferPtr.count > 0 {
                 let ptr = rawPtr.assumingMemoryBound(to: UInt8.self)
                 return withUnsafeMutablePointer(to: &recoverableSignature) { (signaturePointer: UnsafeMutablePointer<secp256k1_ecdsa_recoverable_signature>) -> Int32 in
-                    let res = secp256k1_ecdsa_recoverable_signature_parse_compact(context, signaturePointer, ptr, v)
+                    let res = web3_secp256k1_ecdsa_recoverable_signature_parse_compact(context, signaturePointer, ptr, v)
                     return res
                 }
             } else {
@@ -215,7 +215,7 @@ extension SECP256K1 {
                 let typedSignaturePointer = signatureRawPointer.assumingMemoryBound(to: UInt8.self)
                 return withUnsafePointer(to: &recoverableSignature) { (signaturePointer: UnsafePointer<secp256k1_ecdsa_recoverable_signature>) -> Int32 in
                     withUnsafeMutablePointer(to: &v) { (vPtr: UnsafeMutablePointer<Int32>) -> Int32 in
-                        let res = secp256k1_ecdsa_recoverable_signature_serialize_compact(context, typedSignaturePointer, vPtr, signaturePointer)
+                        let res = web3_secp256k1_ecdsa_recoverable_signature_serialize_compact(context, typedSignaturePointer, vPtr, signaturePointer)
                         return res
                     }
                 }
@@ -255,7 +255,7 @@ extension SECP256K1 {
                             if let extraEntropyRPointer = extraEntropyRBPointer.baseAddress, extraEntropyRBPointer.count > 0 {
                                 let extraEntropyPointer = extraEntropyRPointer.assumingMemoryBound(to: UInt8.self)
                                 return withUnsafeMutablePointer(to: &recoverableSignature) { (recSignaturePtr: UnsafeMutablePointer<secp256k1_ecdsa_recoverable_signature>) -> Int32 in
-                                    let res = secp256k1_ecdsa_sign_recoverable(context, recSignaturePtr, hashPointer, privateKeyPointer, nil, useExtraEntropy ? extraEntropyPointer : nil)
+                                    let res = web3_secp256k1_ecdsa_sign_recoverable(context, recSignaturePtr, hashPointer, privateKeyPointer, nil, useExtraEntropy ? extraEntropyPointer : nil)
                                     return res
                                 }
                             } else {
@@ -289,7 +289,7 @@ extension SECP256K1 {
         let result = privateKey.withUnsafeBytes { privateKeyRBPointer -> Int32? in
             if let privateKeyRPointer = privateKeyRBPointer.baseAddress, privateKeyRBPointer.count > 0 {
                 let privateKeyPointer = privateKeyRPointer.assumingMemoryBound(to: UInt8.self)
-                let res = secp256k1_ec_seckey_verify(context, privateKeyPointer)
+                let res = web3_secp256k1_ec_seckey_verify(context, privateKeyPointer)
                 return res
             } else {
                 return nil
